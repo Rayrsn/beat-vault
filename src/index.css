@@ -1,0 +1,253 @@
+:root {
+  --bg-void: #07060b;
+  --bg-panel: #100e17;
+  --bg-card: #151320;
+  --bg-card-hover: #1e1a2e;
+  --border-steel: #28243a;
+  --border-steel-bright: #3d3758;
+  
+  --text-main: #f3f0fd;
+  --text-muted: #8b85ab;
+  --text-dim: #544e73;
+  
+  /* Blueish Purple Palette */
+  --accent-purple: #8b5cf6;
+  --accent-purple-bright: #a78bfa;
+  --accent-purple-glow: rgba(139, 92, 246, 0.3);
+  --accent-blue: #3b82f6;
+  --accent-blue-bright: #60a5fa;
+  --accent-magenta: #c084fc;
+  
+  --font-impact: 'Syne', 'Bebas Neue', sans-serif;
+  --font-bebas: 'Bebas Neue', cursive, sans-serif;
+  --font-body: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  --header-height: 72px;
+  --player-height: 94px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-void);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  overflow-x: hidden;
+  min-height: 100vh;
+  padding-bottom: calc(var(--player-height) + 20px);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Industrial Purple Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-void);
+  border-left: 1px solid var(--border-steel);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-steel-bright);
+  border-radius: 0px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-purple);
+}
+
+/* CRT Scanlines & Purple Tint Overlay */
+.scanlines-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+  background: linear-gradient(
+    rgba(16, 14, 23, 0) 50%, 
+    rgba(0, 0, 0, 0.3) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(139, 92, 246, 0.04),
+    rgba(59, 130, 246, 0.02),
+    rgba(192, 132, 252, 0.04)
+  );
+  background-size: 100% 4px, 6px 100%;
+  opacity: 0.75;
+}
+
+/* Industrial Grid Background */
+.industrial-grid-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background-image: 
+    linear-gradient(to right, rgba(139, 92, 246, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(139, 92, 246, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+/* Marquee Animation */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+  background: var(--accent-purple);
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-top: 2px solid var(--border-steel-bright);
+  border-bottom: 2px solid var(--border-steel-bright);
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.marquee-content {
+  display: inline-block;
+  animation: marquee 25s linear infinite;
+}
+
+/* Brutalist Buttons & Elements */
+.btn-brutal {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 10px 20px;
+  background: var(--bg-panel);
+  color: var(--text-main);
+  border: 2px solid var(--border-steel-bright);
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+  text-decoration: none;
+}
+
+.btn-brutal:hover {
+  background: var(--accent-purple);
+  color: #fff;
+  border-color: var(--accent-purple-bright);
+  box-shadow: 4px 4px 0px #000, 0 0 15px var(--accent-purple-glow);
+  transform: translate(-2px, -2px);
+}
+
+.btn-brutal-primary {
+  background: var(--accent-purple);
+  color: #fff;
+  border-color: var(--accent-purple-bright);
+  box-shadow: 2px 2px 0px #000;
+}
+.btn-brutal-primary:hover {
+  background: #9d4edd;
+  color: #fff;
+  box-shadow: 4px 4px 0px var(--accent-blue);
+}
+
+.btn-brutal-secondary {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--accent-blue-bright);
+  border-color: var(--accent-blue);
+}
+.btn-brutal-secondary:hover {
+  background: var(--accent-blue);
+  color: #fff;
+  box-shadow: 4px 4px 0px #000;
+}
+
+/* Monospace Badge Tag */
+.badge-mono {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-steel);
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.badge-mono-active {
+  background: var(--accent-purple);
+  color: #fff;
+  border-color: var(--accent-purple-bright);
+}
+
+/* 3D Tactile Card Container */
+.card-tactile {
+  background: var(--bg-card);
+  border: 2px solid var(--border-steel);
+  transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-tactile:hover {
+  border-color: var(--accent-purple);
+  box-shadow: 6px 6px 0px rgba(139, 92, 246, 0.25), 0 0 20px rgba(139, 92, 246, 0.15);
+  transform: translateY(-4px);
+}
+
+.card-tactile-playing {
+  border-color: var(--accent-purple-bright) !important;
+  background: var(--bg-card-hover);
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.3), 4px 4px 0px var(--accent-purple) !important;
+}
+
+/* Equalizer Canvas Wrapper */
+.visualizer-canvas {
+  width: 100%;
+  height: 48px;
+  background: #09080e;
+  border: 1px solid var(--border-steel);
+  display: block;
+}
+
+/* Glitch Heading Effect */
+.glitch-text {
+  font-family: var(--font-impact);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+  position: relative;
+  color: var(--text-main);
+}
+
+/* Layout Container */
+.vault-container {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Utility Animations */
+@keyframes pulseGlow {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+.pulse-active {
+  animation: pulseGlow 1.5s infinite;
+}
