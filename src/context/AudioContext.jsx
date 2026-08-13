@@ -30,6 +30,7 @@ export const AudioProvider = ({ children }) => {
   // Initialize HTML5 Audio Element & Event Listeners
   useEffect(() => {
     const audio = new Audio();
+    audio.crossOrigin = "anonymous";
     audio.volume = volume;
     audioRef.current = audio;
 
@@ -66,7 +67,7 @@ export const AudioProvider = ({ children }) => {
     };
   }, []);
 
-  // Web Audio Context setup for visualizer
+  // Web Audio Context setup (Called safely after media pipeline is ready)
   const initWebAudio = () => {
     if (!audioCtxRef.current && audioRef.current) {
       try {
@@ -97,12 +98,12 @@ export const AudioProvider = ({ children }) => {
   const playTrack = (track, trackList = []) => {
     if (!audioRef.current) return;
     setStreamErrorNotice(null);
-    initWebAudio();
 
     if (currentTrack?.id === track.id) {
       if (isPlaying) {
         audioRef.current.pause();
       } else {
+        initWebAudio();
         audioRef.current.play().catch(console.error);
       }
       return;
@@ -126,7 +127,9 @@ export const AudioProvider = ({ children }) => {
         }
         const hls = new Hls({
           enableWorker: true,
-          lowLatencyMode: true,
+          lowLatencyMode: false, // Standard buffer latency for stable media source appends
+          backBufferLength: 90,
+          maxBufferLength: 30,
           xhrSetup: (xhr) => {
             xhr.withCredentials = false;
           }
@@ -136,21 +139,26 @@ export const AudioProvider = ({ children }) => {
         hls.attachMedia(audioRef.current);
         
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          initWebAudio();
           audioRef.current.play().catch(err => {
-            console.warn("Audio autoplay blocked:", err);
+            console.warn("Audio play blocked by browser policy:", err);
           });
         });
 
         hls.on(Hls.Events.ERROR, (event, data) => {
           if (data.fatal) {
-            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-              console.warn("Network error during stream:", data);
-              audioRef.current.src = audioUrl;
-              audioRef.current.play().catch(() => {});
-            } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-              hls.recoverMediaError();
-            } else {
-              hls.destroy();
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                console.warn("HLS Network Error, recovering...", data);
+                hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                console.warn("HLS Media Error, recovering...", data);
+                hls.recoverMediaError();
+                break;
+              default:
+                hls.destroy();
+                break;
             }
           }
         });
@@ -158,10 +166,12 @@ export const AudioProvider = ({ children }) => {
         hlsRef.current = hls;
       } else if (audioRef.current.canPlayType('application/vnd.apple.mpegurl')) {
         audioRef.current.src = audioUrl;
+        initWebAudio();
         audioRef.current.play().catch(console.error);
       }
     } else {
       audioRef.current.src = audioUrl;
+      initWebAudio();
       audioRef.current.play().catch(console.error);
     }
   };
@@ -172,11 +182,11 @@ export const AudioProvider = ({ children }) => {
       return;
     }
     if (!audioRef.current) return;
-    initWebAudio();
 
     if (isPlaying) {
       audioRef.current.pause();
     } else {
+      initWebAudio();
       audioRef.current.play().catch(console.error);
     }
   };
