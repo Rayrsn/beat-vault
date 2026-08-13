@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { AudioProvider, useAudio } from './context/AudioContext';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -12,16 +12,76 @@ import { SearchX, ArrowLeft, Sliders, Disc } from 'lucide-react';
 const MainAppContent = () => {
   const { tracks, beatPacks, scanlinesActive } = useAudio();
 
-  // Navigation View State: 'home' | 'packs' | 'catalog'
-  const [activeView, setActiveView] = useState('home');
+  // Initialize navigation & filter states from URL SearchParams or localStorage for reload persistence
+  const getInitialState = () => {
+    const params = new URLSearchParams(window.location.search);
+    const hash = window.location.hash.replace('#', '');
+    
+    const viewFromUrl = params.get('view') || (['home', 'packs', 'catalog'].includes(hash) ? hash : null);
+    const initialView = viewFromUrl || localStorage.getItem('beat_vault_view') || 'home';
+    const initialPack = params.get('pack') || localStorage.getItem('beat_vault_pack') || '';
+    const initialQuery = params.get('search') || '';
+    const initialKey = params.get('key') || '';
+    const initialGenre = params.get('genre') || '';
+    const initialBpm = params.get('bpm') ? Number(params.get('bpm')) : 180;
+    const initialMode = localStorage.getItem('beat_vault_view_mode') || 'grid';
 
-  // Filter States
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPack, setSelectedPack] = useState('');
-  const [selectedKey, setSelectedKey] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState('');
-  const [bpmRange, setBpmRange] = useState(180);
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
+    return {
+      activeView: ['home', 'packs', 'catalog'].includes(initialView) ? initialView : 'home',
+      selectedPack: initialPack,
+      searchQuery: initialQuery,
+      selectedKey: initialKey,
+      selectedGenre: initialGenre,
+      bpmRange: initialBpm,
+      viewMode: initialMode
+    };
+  };
+
+  const initial = useMemo(getInitialState, []);
+
+  const [activeView, setActiveView] = useState(initial.activeView);
+  const [searchQuery, setSearchQuery] = useState(initial.searchQuery);
+  const [selectedPack, setSelectedPack] = useState(initial.selectedPack);
+  const [selectedKey, setSelectedKey] = useState(initial.selectedKey);
+  const [selectedGenre, setSelectedGenre] = useState(initial.selectedGenre);
+  const [bpmRange, setBpmRange] = useState(initial.bpmRange);
+  const [viewMode, setViewMode] = useState(initial.viewMode);
+
+  // Sync state changes to URL SearchParams & localStorage
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (activeView !== 'home') params.set('view', activeView);
+    if (selectedPack) params.set('pack', selectedPack);
+    if (searchQuery) params.set('search', searchQuery);
+    if (selectedKey) params.set('key', selectedKey);
+    if (selectedGenre) params.set('genre', selectedGenre);
+    if (bpmRange < 180) params.set('bpm', bpmRange.toString());
+
+    const queryString = params.toString();
+    const newUrl = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
+    
+    window.history.replaceState(null, '', newUrl);
+
+    localStorage.setItem('beat_vault_view', activeView);
+    localStorage.setItem('beat_vault_pack', selectedPack);
+    localStorage.setItem('beat_vault_view_mode', viewMode);
+  }, [activeView, selectedPack, searchQuery, selectedKey, selectedGenre, bpmRange, viewMode]);
+
+  // Handle browser back/forward navigation (popstate)
+  useEffect(() => {
+    const handlePopState = () => {
+      const state = getInitialState();
+      setActiveView(state.activeView);
+      setSelectedPack(state.selectedPack);
+      setSearchQuery(state.searchQuery);
+      setSelectedKey(state.selectedKey);
+      setSelectedGenre(state.selectedGenre);
+      setBpmRange(state.bpmRange);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Extract unique Keys and Genres for dropdown filters
   const allKeys = useMemo(() => {
@@ -178,7 +238,7 @@ const MainAppContent = () => {
       <footer className="industrial-footer">
         <div className="vault-container footer-inner">
           <div className="footer-left">
-            <span className="footer-brand">RAYR // INDUSTRIAL BEAT SHOWCASE</span>
+            <span className="footer-brand">RAYR // BEAT SHOWCASE</span>
             <span className="footer-copy">© 2026 RAYR BEATS. ALL RIGHTS RESERVED.</span>
           </div>
           <div className="footer-links">

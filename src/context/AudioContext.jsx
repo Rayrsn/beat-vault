@@ -12,7 +12,7 @@ export const AudioProvider = ({ children }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(0.85);
+  const [volume, setVolume] = useState(1.0);
   const [isMuted, setIsMuted] = useState(false);
   const [queue, setQueue] = useState([]);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
@@ -28,11 +28,16 @@ export const AudioProvider = ({ children }) => {
   const sourceRef = useRef(null);
   const recoveryAttemptRef = useRef(0);
 
+  // References for Media Session callbacks
+  const playNextRef = useRef(null);
+  const playPrevRef = useRef(null);
+  const seekToRef = useRef(null);
+
   // Initialize HTML5 Audio Element & Event Listeners
   useEffect(() => {
     const audio = new Audio();
     audio.crossOrigin = "anonymous";
-    audio.volume = volume;
+    audio.volume = 1.0;
     audioRef.current = audio;
 
     const handlePlay = () => setIsPlaying(true);
@@ -311,6 +316,76 @@ export const AudioProvider = ({ children }) => {
       setCurrentTime(seconds);
     }
   };
+
+  // Sync ref functions for Media Session callbacks
+  useEffect(() => {
+    playNextRef.current = playNext;
+    playPrevRef.current = playPrev;
+    seekToRef.current = seekTo;
+  });
+
+  // Android & Mobile System Media Notification Session API
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+
+    if (currentTrack) {
+      const packTitle = beatPacks.find(p => p.id === currentTrack.packId)?.title || currentTrack.packTitle || 'Beat Pack';
+
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentTrack.title || 'Beat Track',
+        artist: 'RAYR BEATS',
+        album: packTitle,
+        artwork: [
+          { src: currentTrack.coverUrl || './bg2.png', sizes: '512x512', type: 'image/png' }
+        ]
+      });
+
+      const handlers = [
+        ['play', () => {
+          if (audioRef.current) {
+            initWebAudio();
+            audioRef.current.play().catch(() => {});
+            setIsPlaying(true);
+          }
+        }],
+        ['pause', () => {
+          if (audioRef.current) {
+            audioRef.current.pause();
+            setIsPlaying(false);
+          }
+        }],
+        ['previoustrack', () => playPrevRef.current && playPrevRef.current()],
+        ['nexttrack', () => playNextRef.current && playNextRef.current()],
+        ['seekto', (details) => {
+          if (details.seekTime !== undefined && details.seekTime !== null) {
+            seekToRef.current && seekToRef.current(details.seekTime);
+          }
+        }]
+      ];
+
+      for (const [action, handler] of handlers) {
+        try {
+          navigator.mediaSession.setActionHandler(action, handler);
+        } catch (e) {}
+      }
+    }
+  }, [currentTrack, beatPacks]);
+
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+
+    if (navigator.mediaSession.setPositionState && duration > 0 && !isNaN(duration)) {
+      try {
+        navigator.mediaSession.setPositionState({
+          duration: duration,
+          playbackRate: audioRef.current ? audioRef.current.playbackRate : 1.0,
+          position: Math.min(currentTime, duration)
+        });
+      } catch (e) {}
+    }
+  }, [isPlaying, currentTime, duration]);
 
   const handleVolumeChange = (newVol) => {
     setVolume(newVol);

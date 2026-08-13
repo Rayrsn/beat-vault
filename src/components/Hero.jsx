@@ -12,7 +12,7 @@ const Hero = ({ onGoToPacks, onGoToCatalog }) => {
 
       <div className="vault-container hero-content">
         <div className="hero-badge">
-          <Headphones size={14} className="pulse-active" /> INDUSTRIAL BEAT ARCHIVE // STEREO HLS PREVIEWS
+          <Headphones size={14} className="pulse-active" /> BEAT ARCHIVE // STEREO HLS PREVIEWS
         </div>
 
         <h1 className="hero-title glitch-text">
@@ -32,31 +32,12 @@ const Hero = ({ onGoToPacks, onGoToCatalog }) => {
             <Disc size={18} /> BROWSE ALL BEATS
           </button>
         </div>
-
-        <div className="hero-stats">
-          <div className="stat-card">
-            <span className="stat-num">{tracks.length || 210}</span>
-            <span className="stat-label">BEAT PREVIEWS</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-num">{beatPacks.length || 10}</span>
-            <span className="stat-label">BEAT PACKS</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-num">HLS</span>
-            <span className="stat-label">STREAMING ENGINE</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-num">320K</span>
-            <span className="stat-label">STEREO QUALITY</span>
-          </div>
-        </div>
       </div>
 
       <style>{`
         .hero-section {
           position: relative;
-          min-height: 400px;
+          min-height: 340px;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
@@ -87,8 +68,8 @@ const Hero = ({ onGoToPacks, onGoToCatalog }) => {
         .hero-content {
           position: relative;
           z-index: 2;
-          padding-top: 50px;
-          padding-bottom: 40px;
+          padding-top: 40px;
+          padding-bottom: 30px;
         }
         .hero-badge {
           display: inline-flex;
@@ -125,38 +106,10 @@ const Hero = ({ onGoToPacks, onGoToCatalog }) => {
           display: flex;
           flex-wrap: wrap;
           gap: 16px;
-          margin-bottom: 40px;
         }
         .hero-btn {
           padding: 14px 28px;
           font-size: 0.95rem;
-        }
-        .hero-stats {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-          gap: 16px;
-          border-top: 1px solid var(--border-steel);
-          padding-top: 24px;
-        }
-        .stat-card {
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid var(--border-steel);
-          padding: 12px 16px;
-          display: flex;
-          flex-direction: column;
-        }
-        .stat-num {
-          font-family: var(--font-impact);
-          font-size: 1.8rem;
-          font-weight: 900;
-          color: var(--text-main);
-          line-height: 1;
-        }
-        .stat-label {
-          font-family: var(--font-mono);
-          font-size: 0.7rem;
-          color: var(--text-muted);
-          margin-top: 4px;
         }
       `}</style>
     </section>
