@@ -17,6 +17,7 @@ export const AudioProvider = ({ children }) => {
   const [queue, setQueue] = useState([]);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [scanlinesActive, setScanlinesActive] = useState(true);
+  const [hasWebAudioCors, setHasWebAudioCors] = useState(true);
 
   // Web Audio API refs
   const audioRef = useRef(null);
@@ -25,10 +26,9 @@ export const AudioProvider = ({ children }) => {
   const analyserRef = useRef(null);
   const sourceRef = useRef(null);
 
-  // Initialize HTML5 Audio Element & Web Audio API
+  // Initialize HTML5 Audio Element
   useEffect(() => {
     const audio = new Audio();
-    audio.crossOrigin = "anonymous";
     audio.volume = volume;
     audioRef.current = audio;
 
@@ -56,7 +56,7 @@ export const AudioProvider = ({ children }) => {
     };
   }, []);
 
-  // Web Audio Context setup for visualizer
+  // Web Audio Context setup for visualizer with safe CORS fallback
   const initWebAudio = () => {
     if (!audioCtxRef.current && audioRef.current) {
       try {
@@ -65,6 +65,7 @@ export const AudioProvider = ({ children }) => {
         const analyser = ctx.createAnalyser();
         analyser.fftSize = 64; // High response frequency bars
         
+        // Attempt connecting source (may fail if CORS is missing on remote CDN)
         const source = ctx.createMediaElementSource(audioRef.current);
         source.connect(analyser);
         analyser.connect(ctx.destination);
@@ -72,12 +73,14 @@ export const AudioProvider = ({ children }) => {
         audioCtxRef.current = ctx;
         analyserRef.current = analyser;
         sourceRef.current = source;
+        setHasWebAudioCors(true);
       } catch (e) {
-        console.warn("Web Audio API initialization fallback:", e);
+        console.warn("Web Audio API CORS restricted on remote media source. Using synthetic visualizer fallback:", e);
+        setHasWebAudioCors(false);
       }
     }
     if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
-      audioCtxRef.current.resume();
+      audioCtxRef.current.resume().catch(() => {});
     }
   };
 
@@ -115,12 +118,38 @@ export const AudioProvider = ({ children }) => {
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: true,
+          xhrSetup: (xhr) => {
+            xhr.withCredentials = false;
+          }
         });
+
         hls.loadSource(audioUrl);
         hls.attachMedia(audioRef.current);
+        
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
+          audioRef.current.play().then(() => setIsPlaying(true)).catch(err => {
+            console.warn("Audio autoplay blocked by browser policy:", err);
+          });
         });
+
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          if (data.fatal) {
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                console.warn("HLS Network Error, trying recovery...", data);
+                hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                console.warn("HLS Media Error, recovering...", data);
+                hls.recoverMediaError();
+                break;
+              default:
+                hls.destroy();
+                break;
+            }
+          }
+        });
+
         hlsRef.current = hls;
       } else if (audioRef.current.canPlayType('application/vnd.apple.mpegurl')) {
         // Native Safari HLS support
@@ -157,7 +186,7 @@ export const AudioProvider = ({ children }) => {
     if (currentIndex !== -1 && currentIndex < activeList.length - 1) {
       playTrack(activeList[currentIndex + 1], activeList);
     } else if (activeList.length > 0) {
-      playTrack(activeList[0], activeList); // Loop back to start
+      playTrack(activeList[0], activeList);
     }
   };
 
@@ -232,6 +261,7 @@ export const AudioProvider = ({ children }) => {
         queue,
         isQueueOpen,
         scanlinesActive,
+        hasWebAudioCors,
         analyserRef,
         setScanlinesActive,
         setIsQueueOpen,
