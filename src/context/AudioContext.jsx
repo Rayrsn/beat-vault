@@ -159,12 +159,35 @@ export const AudioProvider = ({ children }) => {
     // HLS.js streaming setup
     if (audioUrl.endsWith('.m3u8')) {
       if (Hls.isSupported()) {
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+        class KeyRewriterLoader extends Hls.DefaultConfig.loader {
+          load(context, config, callbacks) {
+            if (context.url) {
+              if (isLocalhost) {
+                if (context.url.includes('beats.rayr.cf/')) {
+                  context.url = context.url.replace('https://beats.rayr.cf/', '/r2-beats/');
+                } else if (context.url.includes('rayr.cf/')) {
+                  context.url = context.url.replace('https://rayr.cf/', '/r2-beats/');
+                }
+              } else {
+                if (context.url.includes('rayr.cf/') && !context.url.includes('beats.rayr.cf/')) {
+                  context.url = context.url.replace('https://rayr.cf/', 'https://beats.rayr.cf/');
+                }
+              }
+            }
+            super.load(context, config, callbacks);
+          }
+        }
+
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,
           backBufferLength: 90,
           maxBufferLength: 30,
           maxMaxBufferLength: 600,
+          fLoader: KeyRewriterLoader,
+          pLoader: KeyRewriterLoader,
           xhrSetup: (xhr) => {
             xhr.withCredentials = false;
           }
@@ -172,8 +195,23 @@ export const AudioProvider = ({ children }) => {
 
         hlsRef.current = hls;
         hls.attachMedia(audio);
-        hls.loadSource(audioUrl);
+        const finalUrl = isLocalhost
+          ? audioUrl.replace('https://beats.rayr.cf/', '/r2-beats/').replace('https://rayr.cf/', '/r2-beats/')
+          : audioUrl.replace('https://rayr.cf/', 'https://beats.rayr.cf/');
+        hls.loadSource(finalUrl);
         
+        hls.on(Hls.Events.KEY_LOADING, (event, data) => {
+          if (data && data.frag && data.frag.decryptdata && data.frag.decryptdata.uri) {
+            let keyUri = data.frag.decryptdata.uri;
+            if (isLocalhost) {
+              keyUri = keyUri.replace('https://beats.rayr.cf/', '/r2-beats/').replace('https://rayr.cf/', '/r2-beats/');
+            } else {
+              keyUri = keyUri.replace('https://rayr.cf/', 'https://beats.rayr.cf/');
+            }
+            data.frag.decryptdata.uri = keyUri;
+          }
+        });
+
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           const playPromise = audio.play();
           if (playPromise !== undefined) {
