@@ -2,15 +2,19 @@ import React, { useState, useMemo } from 'react';
 import { AudioProvider, useAudio } from './context/AudioContext';
 import Header from './components/Header';
 import Hero from './components/Hero';
+import PackGridShowcase from './components/PackGridShowcase';
 import FilterBar from './components/FilterBar';
 import TrackCard from './components/TrackCard';
 import AudioPlayer from './components/AudioPlayer';
 import QueueDrawer from './components/QueueDrawer';
 import ShowcaseSection from './components/ShowcaseSection';
-import { SearchX } from 'lucide-react';
+import { SearchX, ArrowLeft, Sliders, Disc } from 'lucide-react';
 
 const MainAppContent = () => {
   const { tracks, beatPacks, scanlinesActive } = useAudio();
+
+  // Navigation View State: 'home' | 'packs' | 'catalog'
+  const [activeView, setActiveView] = useState('home');
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -66,73 +70,112 @@ const MainAppContent = () => {
     setBpmRange(180);
   };
 
+  const handleSelectPackFromHome = (packId) => {
+    setSelectedPack(packId);
+    setActiveView('packs');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="vault-app-root">
       {scanlinesActive && <div className="scanlines-overlay"></div>}
       <div className="industrial-grid-bg"></div>
 
-      <Header />
-      <Hero />
+      <Header activeView={activeView} setActiveView={setActiveView} />
 
-      {/* Main Catalog Container */}
-      <main className="vault-container" id="catalog">
-        <div className="catalog-header-row" id="packs">
-          <div className="catalog-title-box">
-            <h2 className="catalog-heading">
-              BEAT <span className="accent-text">CATALOG</span>
-            </h2>
-            <span className="catalog-count-badge">
-              SHOWING {filteredTracks.length} OF {tracks.length} PREVIEW STREAMS
-            </span>
-          </div>
+      {/* VIEW 1: LANDING PAGE ('home') */}
+      {activeView === 'home' && (
+        <div className="view-home">
+          <Hero 
+            onGoToPacks={() => {
+              setSelectedPack('');
+              setActiveView('packs');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onGoToCatalog={() => {
+              setSelectedPack('');
+              setActiveView('catalog');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+
+          <PackGridShowcase 
+            beatPacks={beatPacks}
+            tracks={tracks}
+            onSelectPack={handleSelectPackFromHome}
+          />
+
+          <ShowcaseSection />
         </div>
+      )}
 
-        {/* Filter Controls Bar */}
-        <FilterBar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          selectedPack={selectedPack}
-          setSelectedPack={setSelectedPack}
-          selectedKey={selectedKey}
-          setSelectedKey={setSelectedKey}
-          selectedGenre={selectedGenre}
-          setSelectedGenre={setSelectedGenre}
-          bpmRange={bpmRange}
-          setBpmRange={setBpmRange}
-          viewMode={viewMode}
-          setViewMode={setViewMode}
-          beatPacks={beatPacks}
-          allKeys={allKeys}
-          allGenres={allGenres}
-          onReset={handleResetFilters}
-        />
+      {/* VIEW 2 & 3: PACK LIST / BEAT CATALOG VIEW ('packs' | 'catalog') */}
+      {(activeView === 'packs' || activeView === 'catalog') && (
+        <main className="vault-container view-catalog-container" id="catalog">
+          <div className="catalog-header-row">
+            <div className="catalog-title-box">
+              <button 
+                className="btn-brutal back-home-btn"
+                onClick={() => setActiveView('home')}
+              >
+                <ArrowLeft size={16} /> BACK TO HOME
+              </button>
 
-        {/* Catalog List / Grid */}
-        {filteredTracks.length === 0 ? (
-          <div className="empty-catalog-card card-tactile">
-            <SearchX size={48} className="empty-icon" />
-            <h3 className="empty-title">NO BEATS FOUND MATCHING CRITERIA</h3>
-            <p className="empty-desc">Try resetting your filter parameters or search keywords.</p>
-            <button className="btn-brutal btn-brutal-primary" onClick={handleResetFilters}>
-              RESET FILTERS
-            </button>
+              <h2 className="catalog-heading">
+                {activeView === 'packs' ? 'PACK LIST' : 'ALL BEATS'} <span className="accent-text">STREAM VAULT</span>
+              </h2>
+
+              <span className="catalog-count-badge">
+                SHOWING {filteredTracks.length} OF {tracks.length} PREVIEW STREAMS
+              </span>
+            </div>
           </div>
-        ) : (
-          <div className={`catalog-layout-${viewMode}`}>
-            {filteredTracks.map((track, idx) => (
-              <TrackCard
-                key={track.id}
-                track={track}
-                index={idx}
-                viewMode={viewMode}
-                allFilteredTracks={filteredTracks}
-              />
-            ))}
-          </div>
-        )}
-      </main>
 
-      <ShowcaseSection />
+          {/* Filter Controls Bar */}
+          <FilterBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            selectedPack={selectedPack}
+            setSelectedPack={setSelectedPack}
+            selectedKey={selectedKey}
+            setSelectedKey={setSelectedKey}
+            selectedGenre={selectedGenre}
+            setSelectedGenre={setSelectedGenre}
+            bpmRange={bpmRange}
+            setBpmRange={setBpmRange}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            beatPacks={beatPacks}
+            allKeys={allKeys}
+            allGenres={allGenres}
+            onReset={handleResetFilters}
+          />
+
+          {/* Catalog List / Grid */}
+          {filteredTracks.length === 0 ? (
+            <div className="empty-catalog-card card-tactile">
+              <SearchX size={48} className="empty-icon" />
+              <h3 className="empty-title">NO BEATS FOUND MATCHING CRITERIA</h3>
+              <p className="empty-desc">Try resetting your filter parameters or search keywords.</p>
+              <button className="btn-brutal btn-brutal-primary" onClick={handleResetFilters}>
+                RESET FILTERS
+              </button>
+            </div>
+          ) : (
+            <div className={`catalog-layout-${viewMode}`}>
+              {filteredTracks.map((track, idx) => (
+                <TrackCard
+                  key={track.id}
+                  track={track}
+                  index={idx}
+                  viewMode={viewMode}
+                  allFilteredTracks={filteredTracks}
+                />
+              ))}
+            </div>
+          )}
+        </main>
+      )}
 
       {/* Footer */}
       <footer className="industrial-footer">
@@ -142,9 +185,9 @@ const MainAppContent = () => {
             <span className="footer-copy">© 2026 RAYR BEATS. ALL RIGHTS RESERVED.</span>
           </div>
           <div className="footer-links">
-            <a href="#catalog" className="footer-link">CATALOG</a>
-            <a href="#packs" className="footer-link">BEAT PACKS</a>
-            <a href="#contact" className="footer-link">CONTACT</a>
+            <button className="footer-link-btn" onClick={() => setActiveView('home')}>HOME</button>
+            <button className="footer-link-btn" onClick={() => setActiveView('packs')}>BEAT PACKS</button>
+            <button className="footer-link-btn" onClick={() => setActiveView('catalog')}>ALL BEATS</button>
           </div>
         </div>
       </footer>
@@ -157,9 +200,12 @@ const MainAppContent = () => {
           position: relative;
           min-height: 100vh;
         }
-        .catalog-header-row {
-          margin-top: 50px;
-          margin-bottom: 10px;
+        .view-catalog-container {
+          padding-top: 40px;
+        }
+        .back-home-btn {
+          margin-bottom: 20px;
+          padding: 8px 16px;
         }
         .catalog-heading {
           font-family: var(--font-impact);
@@ -244,14 +290,16 @@ const MainAppContent = () => {
           display: flex;
           gap: 20px;
         }
-        .footer-link {
+        .footer-link-btn {
+          background: none;
+          border: none;
           font-family: var(--font-mono);
           font-size: 0.8rem;
           font-weight: 700;
           color: var(--text-muted);
-          text-decoration: none;
+          cursor: pointer;
         }
-        .footer-link:hover {
+        .footer-link-btn:hover {
           color: var(--accent-purple-bright);
         }
       `}</style>

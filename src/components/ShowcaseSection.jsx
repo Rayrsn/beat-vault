@@ -1,30 +1,20 @@
-import React, { useState } from 'react';
-import { Mail, Send, Radio, Disc, Sparkles, Video, Music, Globe, Headphones, Share2 } from 'lucide-react';
+import React from 'react';
+import { Radio, Disc, Sparkles, Video, Music, Globe, Headphones } from 'lucide-react';
 
 const ShowcaseSection = () => {
-  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 4000);
-    setFormData({ name: '', email: '', message: '' });
-  };
-
   return (
-    <section id="contact" className="showcase-section">
+    <section className="showcase-section">
       <div className="vault-container">
         {/* Section Header */}
         <div className="section-header">
           <div className="section-badge">
-            <Radio size={14} /> PRODUCER ARCHIVE & CONTACT
+            <Radio size={14} /> PRODUCER ARCHIVE & SPECIFICATIONS
           </div>
           <h2 className="section-title glitch-text">
-            RAYR <span className="accent-text">PRODUCER SHOWCASE</span>
+            RAYR <span className="accent-text">SOUND SHOWCASE</span>
           </h2>
           <p className="section-subtitle">
-            THIS SITE SERVES AS AN INDUSTRIAL ARCHIVE FOR PREVIEWING RAYR'S INSTRUMENTALS AND COLLABORATIVE BEAT PACKS.
+            AN INDUSTRIAL ARCHIVE FOR PREVIEWING INSTRUMENTALS AND COLLABORATIVE BEAT PACKS.
           </p>
         </div>
 
@@ -63,7 +53,7 @@ const ShowcaseSection = () => {
           {/* Card 3: Connect & Socials */}
           <div className="card-tactile showcase-card">
             <div className="card-icon-box"><Sparkles size={24} /></div>
-            <h3 className="showcase-card-title">CONNECT WITH RAYR</h3>
+            <h3 className="showcase-card-title">OFFICIAL PLATFORMS</h3>
             <p className="showcase-card-desc">
               Follow Rayr across official music platforms for new beat drops, loop kits, and drum kit releases.
             </p>
@@ -80,75 +70,16 @@ const ShowcaseSection = () => {
             </div>
           </div>
         </div>
-
-        {/* Contact & Custom Beat Inquiry */}
-        <div className="card-tactile contact-card">
-          <div className="contact-info">
-            <div className="contact-badge"><Mail size={14} /> DIRECT INQUIRIES</div>
-            <h3 className="contact-title">WORK WITH RAYR / CUSTOM BEAT INQUIRY</h3>
-            <p className="contact-desc">
-              Interested in custom beat production, placement inquiries, stem requests, or collaborating directly with Rayr? Send a message below.
-            </p>
-          </div>
-
-          <form className="contact-form" onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label className="form-label">NAME / ARTIST ALIAS</label>
-              <input 
-                type="text" 
-                className="form-input" 
-                required 
-                placeholder="e.g. Artist Name" 
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">EMAIL ADDRESS</label>
-              <input 
-                type="email" 
-                className="form-input" 
-                required 
-                placeholder="contact@domain.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">INQUIRY / MESSAGE</label>
-              <textarea 
-                className="form-input form-textarea" 
-                rows="3" 
-                required 
-                placeholder="Mention specific beat titles, placement requirements, or custom production requests..."
-                value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              ></textarea>
-            </div>
-
-            <button type="submit" className="btn-brutal btn-brutal-primary submit-btn">
-              <Send size={16} /> SEND MESSAGE
-            </button>
-
-            {submitted && (
-              <div className="form-success-alert">
-                [SUCCESS] YOUR MESSAGE HAS BEEN TRANSMITTED DIRECTLY TO RAYR. EXPECT A RESPONSE SHORTLY.
-              </div>
-            )}
-          </form>
-        </div>
       </div>
 
       <style>{`
         .showcase-section {
-          padding: 80px 0;
+          padding: 60px 0;
           border-top: 2px solid var(--border-steel);
           background: var(--bg-void);
         }
         .section-header {
-          margin-bottom: 50px;
+          margin-bottom: 40px;
         }
         .section-badge {
           display: inline-flex;
@@ -174,9 +105,8 @@ const ShowcaseSection = () => {
         }
         .showcase-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
           gap: 24px;
-          margin-bottom: 60px;
         }
         .showcase-card {
           padding: 30px;
@@ -221,87 +151,6 @@ const ShowcaseSection = () => {
         .social-btn {
           justify-content: flex-start;
           padding: 10px 14px;
-        }
-        .contact-card {
-          padding: 40px;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 40px;
-          align-items: center;
-        }
-        .contact-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          font-family: var(--font-mono);
-          font-size: 0.75rem;
-          color: var(--accent-purple-bright);
-          border: 1px solid var(--accent-purple);
-          padding: 4px 10px;
-          margin-bottom: 16px;
-        }
-        .contact-title {
-          font-family: var(--font-impact);
-          font-size: 2rem;
-          font-weight: 900;
-          line-height: 1.15;
-          margin-bottom: 14px;
-        }
-        .contact-desc {
-          font-family: var(--font-mono);
-          font-size: 0.85rem;
-          color: var(--text-muted);
-          line-height: 1.6;
-        }
-        .contact-form {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-        .form-label {
-          font-family: var(--font-mono);
-          font-size: 0.75rem;
-          font-weight: 700;
-          color: var(--text-muted);
-        }
-        .form-input {
-          background: var(--bg-void);
-          border: 2px solid var(--border-steel-bright);
-          color: var(--text-main);
-          font-family: var(--font-mono);
-          font-size: 0.85rem;
-          padding: 10px 14px;
-          outline: none;
-        }
-        .form-input:focus {
-          border-color: var(--accent-purple);
-        }
-        .form-textarea {
-          resize: vertical;
-        }
-        .submit-btn {
-          justify-content: center;
-          padding: 14px;
-        }
-        .form-success-alert {
-          font-family: var(--font-mono);
-          font-size: 0.8rem;
-          color: var(--accent-purple-bright);
-          background: rgba(139, 92, 246, 0.12);
-          border: 1px solid var(--accent-purple);
-          padding: 12px;
-        }
-
-        @media (max-width: 850px) {
-          .contact-card {
-            grid-template-columns: 1fr;
-            padding: 24px;
-          }
         }
       `}</style>
     </section>

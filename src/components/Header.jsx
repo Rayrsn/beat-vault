@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAudio } from '../context/AudioContext';
-import { Activity, Tv, Disc, Sliders, Mail } from 'lucide-react';
+import { Tv, Disc, Sliders, Home, Layers } from 'lucide-react';
 
-const Header = () => {
+const Header = ({ activeView, setActiveView }) => {
   const { scanlinesActive, setScanlinesActive, tracks } = useAudio();
   const [timeStr, setTimeStr] = useState('');
 
@@ -20,7 +20,7 @@ const Header = () => {
     <header className="industrial-header">
       <div className="vault-container header-inner">
         {/* Brand & Status */}
-        <div className="header-brand">
+        <div className="header-brand" onClick={() => setActiveView('home')} style={{ cursor: 'pointer' }}>
           <div className="brand-logo">
             <span className="logo-icon">⚡</span>
             <span className="logo-text">RAYR</span>
@@ -29,21 +29,32 @@ const Header = () => {
           
           <div className="status-pill">
             <span className="status-dot"></span>
-            <span className="status-text">SYS.ONLINE // {tracks.length} BEAT PREVIEWS</span>
+            <span className="status-text">SYS.ONLINE // {tracks.length} BEATS</span>
           </div>
         </div>
 
         {/* Navigation & Controls */}
         <div className="header-nav">
-          <a href="#catalog" className="nav-item">
-            <Disc size={14} /> CATALOG
-          </a>
-          <a href="#packs" className="nav-item">
-            <Sliders size={14} /> BEAT PACKS
-          </a>
-          <a href="#contact" className="nav-item">
-            <Mail size={14} /> CONTACT / INQUIRIES
-          </a>
+          <button 
+            className={`nav-item-btn ${activeView === 'home' ? 'active' : ''}`}
+            onClick={() => setActiveView('home')}
+          >
+            <Home size={14} /> HOME
+          </button>
+          
+          <button 
+            className={`nav-item-btn ${activeView === 'packs' ? 'active' : ''}`}
+            onClick={() => setActiveView('packs')}
+          >
+            <Sliders size={14} /> PACK SHOWCASE
+          </button>
+
+          <button 
+            className={`nav-item-btn ${activeView === 'catalog' ? 'active' : ''}`}
+            onClick={() => setActiveView('catalog')}
+          >
+            <Disc size={14} /> ALL BEATS ({tracks.length})
+          </button>
 
           {/* Time & CRT Toggle */}
           <div className="header-meta">
@@ -120,21 +131,30 @@ const Header = () => {
         .header-nav {
           display: flex;
           align-items: center;
-          gap: 24px;
+          gap: 16px;
         }
-        .nav-item {
+        .nav-item-btn {
+          background: none;
+          border: 1px solid transparent;
           color: var(--text-main);
-          text-decoration: none;
           font-family: var(--font-mono);
           font-weight: 700;
           font-size: 0.85rem;
+          padding: 8px 14px;
+          cursor: pointer;
           display: flex;
           align-items: center;
           gap: 6px;
-          transition: color 0.15s ease;
+          transition: all 0.15s ease;
         }
-        .nav-item:hover {
+        .nav-item-btn:hover {
           color: var(--accent-purple-bright);
+          border-color: var(--border-steel);
+        }
+        .nav-item-btn.active {
+          background: rgba(139, 92, 246, 0.15);
+          color: var(--accent-purple-bright);
+          border-color: var(--accent-purple);
         }
         .header-meta {
           display: flex;
@@ -154,8 +174,8 @@ const Header = () => {
             display: none;
           }
         }
-        @media (max-width: 600px) {
-          .nav-item {
+        @media (max-width: 650px) {
+          .nav-item-btn span {
             display: none;
           }
         }

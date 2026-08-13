@@ -1,16 +1,8 @@
 import React from 'react';
 import { useAudio } from '../context/AudioContext';
-import { Play, Layers, Headphones } from 'lucide-react';
+import { Sliders, Headphones, ArrowRight, Disc } from 'lucide-react';
 
-const Hero = () => {
-  const { playTrack, tracks } = useAudio();
-
-  const handlePlayFeatured = () => {
-    if (tracks.length > 0) {
-      playTrack(tracks[0], tracks);
-    }
-  };
-
+const Hero = ({ onGoToPacks, onGoToCatalog }) => {
   return (
     <section className="hero-section">
       <div className="hero-bg-parallax" style={{ backgroundImage: "url('./bg2.png')" }}></div>
@@ -18,7 +10,7 @@ const Hero = () => {
 
       <div className="vault-container hero-content">
         <div className="hero-badge">
-          <Headphones size={14} className="pulse-active" /> INDUSTRIAL BEAT SHOWCASE // HLS HIGH FIDELITY PREVIEWS
+          <Headphones size={14} className="pulse-active" /> INDUSTRIAL BEAT ARCHIVE // STEREO HLS PREVIEWS
         </div>
 
         <h1 className="hero-title glitch-text">
@@ -26,16 +18,17 @@ const Hero = () => {
         </h1>
 
         <p className="hero-subtitle">
-          EXPLORE AND PREVIEW RAYR'S COMPLETE BEAT ARCHIVE. FEATURING HIGH-OCTANE TRAP, DRILL, JUICE WRLD TYPE BEATS, AND ATMOSPHERIC MELODIC PACKS.
+          OFFICIAL AUDIO ARCHIVE. EXPLORE EXCLUSIVE PACKS FEATURING HIGH-OCTANE TRAP, DRILL, JUICE WRLD TYPE BEATS, AND ATMOSPHERIC SYNTH INSTRUMENTALS.
         </p>
 
         <div className="hero-actions">
-          <button className="btn-brutal btn-brutal-primary hero-btn" onClick={handlePlayFeatured}>
-            <Play size={18} fill="#fff" /> PREVIEW FEATURED BEAT
+          <button className="btn-brutal btn-brutal-primary hero-btn" onClick={onGoToPacks}>
+            <Sliders size={18} /> EXPLORE BEAT PACKS <ArrowRight size={18} />
           </button>
-          <a href="#catalog" className="btn-brutal hero-btn">
-            <Layers size={18} /> BROWSE 136 PREVIEWS
-          </a>
+          
+          <button className="btn-brutal hero-btn" onClick={onGoToCatalog}>
+            <Disc size={18} /> BROWSE ALL BEATS
+          </button>
         </div>
 
         <div className="hero-stats">
@@ -68,7 +61,7 @@ const Hero = () => {
       <style>{`
         .hero-section {
           position: relative;
-          min-height: 480px;
+          min-height: 460px;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
@@ -99,7 +92,7 @@ const Hero = () => {
         .hero-content {
           position: relative;
           z-index: 2;
-          padding-top: 60px;
+          padding-top: 50px;
           padding-bottom: 40px;
         }
         .hero-badge {
