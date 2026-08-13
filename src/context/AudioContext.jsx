@@ -331,12 +331,15 @@ export const AudioProvider = ({ children }) => {
     if (currentTrack) {
       const packTitle = beatPacks.find(p => p.id === currentTrack.packId)?.title || currentTrack.packTitle || 'Beat Pack';
 
+      const logoUrl = new URL('./rayr-logo.svg', window.location.href).href;
+
       navigator.mediaSession.metadata = new MediaMetadata({
         title: currentTrack.title || 'Beat Track',
         artist: 'RAYR BEATS',
         album: packTitle,
         artwork: [
-          { src: currentTrack.coverUrl || './bg2.png', sizes: '512x512', type: 'image/png' }
+          { src: logoUrl, sizes: '512x512', type: 'image/svg+xml' },
+          { src: currentTrack.coverUrl || logoUrl, sizes: '256x256', type: 'image/svg+xml' }
         ]
       });
 

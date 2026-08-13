@@ -22,7 +22,7 @@ const Header = ({ activeView, setActiveView }) => {
         {/* Brand & Status */}
         <div className="header-brand" onClick={() => setActiveView('home')} style={{ cursor: 'pointer' }}>
           <div className="brand-logo">
-            <span className="logo-icon">⚡</span>
+            <img src="./rayr-logo.svg" alt="RAYR Logo" className="header-logo-img" />
             <span className="logo-text">RAYR</span>
             <span className="logo-tag">// PREVIEW VAULT</span>
           </div>
@@ -98,6 +98,12 @@ const Header = ({ activeView, setActiveView }) => {
           font-weight: 900;
           font-size: 1.4rem;
           letter-spacing: -0.5px;
+        }
+        .header-logo-img {
+          width: 32px;
+          height: 32px;
+          object-fit: contain;
+          filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.6));
         }
         .logo-icon {
           color: var(--accent-purple-bright);

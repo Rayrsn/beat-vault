@@ -22,7 +22,6 @@ const MainAppContent = () => {
     const initialPack = params.get('pack') || localStorage.getItem('beat_vault_pack') || '';
     const initialQuery = params.get('search') || '';
     const initialKey = params.get('key') || '';
-    const initialGenre = params.get('genre') || '';
     const initialBpm = params.get('bpm') ? Number(params.get('bpm')) : 180;
     const initialMode = localStorage.getItem('beat_vault_view_mode') || 'grid';
 
@@ -31,7 +30,6 @@ const MainAppContent = () => {
       selectedPack: initialPack,
       searchQuery: initialQuery,
       selectedKey: initialKey,
-      selectedGenre: initialGenre,
       bpmRange: initialBpm,
       viewMode: initialMode
     };
@@ -43,7 +41,6 @@ const MainAppContent = () => {
   const [searchQuery, setSearchQuery] = useState(initial.searchQuery);
   const [selectedPack, setSelectedPack] = useState(initial.selectedPack);
   const [selectedKey, setSelectedKey] = useState(initial.selectedKey);
-  const [selectedGenre, setSelectedGenre] = useState(initial.selectedGenre);
   const [bpmRange, setBpmRange] = useState(initial.bpmRange);
   const [viewMode, setViewMode] = useState(initial.viewMode);
 
@@ -54,7 +51,6 @@ const MainAppContent = () => {
     if (selectedPack) params.set('pack', selectedPack);
     if (searchQuery) params.set('search', searchQuery);
     if (selectedKey) params.set('key', selectedKey);
-    if (selectedGenre) params.set('genre', selectedGenre);
     if (bpmRange < 180) params.set('bpm', bpmRange.toString());
 
     const queryString = params.toString();
@@ -65,7 +61,7 @@ const MainAppContent = () => {
     localStorage.setItem('beat_vault_view', activeView);
     localStorage.setItem('beat_vault_pack', selectedPack);
     localStorage.setItem('beat_vault_view_mode', viewMode);
-  }, [activeView, selectedPack, searchQuery, selectedKey, selectedGenre, bpmRange, viewMode]);
+  }, [activeView, selectedPack, searchQuery, selectedKey, bpmRange, viewMode]);
 
   // Handle browser back/forward navigation (popstate)
   useEffect(() => {
@@ -75,7 +71,6 @@ const MainAppContent = () => {
       setSelectedPack(state.selectedPack);
       setSearchQuery(state.searchQuery);
       setSelectedKey(state.selectedKey);
-      setSelectedGenre(state.selectedGenre);
       setBpmRange(state.bpmRange);
     };
 
@@ -83,15 +78,10 @@ const MainAppContent = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Extract unique Keys and Genres for dropdown filters
+  // Extract unique Keys for dropdown filter
   const allKeys = useMemo(() => {
     const keysSet = new Set(tracks.map(t => t.key).filter(Boolean));
     return Array.from(keysSet).sort();
-  }, [tracks]);
-
-  const allGenres = useMemo(() => {
-    const genreSet = new Set(tracks.map(t => t.genre).filter(Boolean));
-    return Array.from(genreSet).sort();
   }, [tracks]);
 
   // Real-time Filtering Engine
@@ -111,21 +101,17 @@ const MainAppContent = () => {
       // Key filter
       const matchesKey = !selectedKey || t.key === selectedKey;
 
-      // Genre filter
-      const matchesGenre = !selectedGenre || t.genre === selectedGenre;
-
       // BPM Filter
       const matchesBpm = t.bpm <= bpmRange;
 
-      return matchesSearch && matchesPack && matchesKey && matchesGenre && matchesBpm;
+      return matchesSearch && matchesPack && matchesKey && matchesBpm;
     });
-  }, [tracks, searchQuery, selectedPack, selectedKey, selectedGenre, bpmRange]);
+  }, [tracks, searchQuery, selectedPack, selectedKey, bpmRange]);
 
   const handleResetFilters = () => {
     setSearchQuery('');
     setSelectedPack('');
     setSelectedKey('');
-    setSelectedGenre('');
     setBpmRange(180);
   };
 
@@ -196,15 +182,12 @@ const MainAppContent = () => {
             setSelectedPack={setSelectedPack}
             selectedKey={selectedKey}
             setSelectedKey={setSelectedKey}
-            selectedGenre={selectedGenre}
-            setSelectedGenre={setSelectedGenre}
             bpmRange={bpmRange}
             setBpmRange={setBpmRange}
             viewMode={viewMode}
             setViewMode={setViewMode}
             beatPacks={beatPacks}
             allKeys={allKeys}
-            allGenres={allGenres}
             onReset={handleResetFilters}
           />
 

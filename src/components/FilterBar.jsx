@@ -8,15 +8,12 @@ const FilterBar = ({
   setSelectedPack,
   selectedKey,
   setSelectedKey,
-  selectedGenre,
-  setSelectedGenre,
   bpmRange,
   setBpmRange,
   viewMode,
   setViewMode,
   beatPacks,
   allKeys,
-  allGenres,
   onReset
 }) => {
   return (
@@ -57,7 +54,7 @@ const FilterBar = ({
             <List size={16} /> LIST
           </button>
 
-          {(searchQuery || selectedPack || selectedKey || selectedGenre || bpmRange < 180) && (
+          {(searchQuery || selectedPack || selectedKey || bpmRange < 180) && (
             <button className="btn-brutal btn-brutal-secondary reset-btn" onClick={onReset}>
               <X size={14} /> RESET FILTERS
             </button>
@@ -85,28 +82,8 @@ const FilterBar = ({
         ))}
       </div>
 
-      {/* Secondary Controls: Key Select, Genre Filter, BPM Range */}
+      {/* Secondary Controls: Key Select & BPM Range */}
       <div className="filter-bottom-row">
-        {/* Genre Tags */}
-        <div className="genre-tags-wrapper">
-          <span className="filter-label">GENRE:</span>
-          <button
-            className={`genre-chip ${selectedGenre === '' ? 'active' : ''}`}
-            onClick={() => setSelectedGenre('')}
-          >
-            ALL
-          </button>
-          {allGenres.map((g) => (
-            <button
-              key={g}
-              className={`genre-chip ${selectedGenre === g ? 'active' : ''}`}
-              onClick={() => setSelectedGenre(g)}
-            >
-              {g.toUpperCase()}
-            </button>
-          ))}
-        </div>
-
         {/* Key Select Dropdown */}
         <div className="filter-dropdown-wrapper">
           <label className="filter-label">KEY:</label>

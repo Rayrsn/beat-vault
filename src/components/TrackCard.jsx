@@ -46,7 +46,6 @@ const TrackCard = ({ track, index, viewMode = 'grid', allFilteredTracks = [] }) 
         <div className="track-list-meta">
           <span className="badge-mono">{track.bpm} BPM</span>
           <span className="badge-mono">{track.key}</span>
-          <span className="badge-mono">{track.genre}</span>
 
           <button 
             className="btn-brutal share-btn-icon" 
@@ -177,7 +176,6 @@ const TrackCard = ({ track, index, viewMode = 'grid', allFilteredTracks = [] }) 
         <div className="card-meta-row">
           <span className="badge-mono">{track.bpm} BPM</span>
           <span className="badge-mono">{track.key}</span>
-          <span className="badge-mono">{track.genre}</span>
         </div>
 
         <button 
