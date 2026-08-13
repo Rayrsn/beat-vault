@@ -130,9 +130,8 @@ export const AudioProvider = ({ children }) => {
       if (isPlaying) {
         audio.pause();
       } else {
-        audio.play().then(() => {
-          initWebAudio();
-        }).catch(err => console.warn("Play error:", err));
+        initWebAudio();
+        audio.play().catch(err => console.warn("Play error:", err));
       }
       return;
     }
@@ -147,9 +146,17 @@ export const AudioProvider = ({ children }) => {
 
     const audioUrl = track.audioUrl;
 
-    // Pause audio and cleanly detach previous HLS session
-    audio.pause();
+    // Clean up previous HLS session
     destroyHls();
+
+    // Trigger synchronous play attempt inside user gesture event tick
+    initWebAudio();
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        // Expected initial rejection while media source / src is being loaded
+      });
+    }
 
     // HLS.js streaming setup
     if (audioUrl.endsWith('.m3u8')) {
@@ -170,10 +177,8 @@ export const AudioProvider = ({ children }) => {
         hls.attachMedia(audio);
         
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          audio.play().then(() => {
-            initWebAudio();
-          }).catch(err => {
-            console.warn("Audio play blocked by browser policy:", err);
+          audio.play().catch(err => {
+            console.warn("Manifest parsed play retry:", err);
           });
         });
 
@@ -205,15 +210,11 @@ export const AudioProvider = ({ children }) => {
         });
       } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
         audio.src = audioUrl;
-        audio.play().then(() => {
-          initWebAudio();
-        }).catch(console.error);
+        audio.play().catch(console.error);
       }
     } else {
       audio.src = audioUrl;
-      audio.play().then(() => {
-        initWebAudio();
-      }).catch(console.error);
+      audio.play().catch(console.error);
     }
   };
 
@@ -227,9 +228,8 @@ export const AudioProvider = ({ children }) => {
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play().then(() => {
-        initWebAudio();
-      }).catch(console.error);
+      initWebAudio();
+      audioRef.current.play().catch(console.error);
     }
   };
 
