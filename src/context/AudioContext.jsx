@@ -63,7 +63,11 @@ export const AudioProvider = ({ children }) => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
       if (hlsRef.current) {
-        hlsRef.current.destroy();
+        try {
+          hlsRef.current.stopLoad();
+          hlsRef.current.detachMedia();
+          hlsRef.current.destroy();
+        } catch (e) {}
       }
     };
   }, []);
@@ -99,19 +103,36 @@ export const AudioProvider = ({ children }) => {
     }
   };
 
+  // Cleanly destroy existing HLS instance
+  const destroyHls = () => {
+    if (hlsRef.current) {
+      try {
+        hlsRef.current.stopLoad();
+        hlsRef.current.detachMedia();
+        hlsRef.current.destroy();
+      } catch (e) {
+        console.warn("Error detaching HLS media:", e);
+      }
+      hlsRef.current = null;
+    }
+  };
+
   // Play a track
   const playTrack = (track, trackList = []) => {
     if (!audioRef.current) return;
     setStreamErrorNotice(null);
     recoveryAttemptRef.current = 0;
 
+    const audio = audioRef.current;
+
+    // Toggle play/pause if clicking currently active track
     if (currentTrack?.id === track.id) {
       if (isPlaying) {
-        audioRef.current.pause();
+        audio.pause();
       } else {
-        audioRef.current.play().then(() => {
+        audio.play().then(() => {
           initWebAudio();
-        }).catch(console.error);
+        }).catch(err => console.warn("Play error:", err));
       }
       return;
     }
@@ -126,12 +147,13 @@ export const AudioProvider = ({ children }) => {
 
     const audioUrl = track.audioUrl;
 
+    // Pause audio and cleanly detach previous HLS session
+    audio.pause();
+    destroyHls();
+
     // HLS.js streaming setup
     if (audioUrl.endsWith('.m3u8')) {
       if (Hls.isSupported()) {
-        if (hlsRef.current) {
-          hlsRef.current.destroy();
-        }
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,
@@ -143,11 +165,12 @@ export const AudioProvider = ({ children }) => {
           }
         });
 
+        hlsRef.current = hls;
         hls.loadSource(audioUrl);
-        hls.attachMedia(audioRef.current);
+        hls.attachMedia(audio);
         
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          audioRef.current.play().then(() => {
+          audio.play().then(() => {
             initWebAudio();
           }).catch(err => {
             console.warn("Audio play blocked by browser policy:", err);
@@ -157,9 +180,9 @@ export const AudioProvider = ({ children }) => {
         hls.on(Hls.Events.ERROR, (event, data) => {
           if (data.fatal) {
             recoveryAttemptRef.current += 1;
-            if (recoveryAttemptRef.current > 3) {
-              console.warn("HLS playback error limit reached. Stopping recovery loop.");
-              hls.destroy();
+            if (recoveryAttemptRef.current > 2) {
+              console.warn("HLS playback error limit reached. Stopping recovery.");
+              destroyHls();
               setIsPlaying(false);
               return;
             }
@@ -170,27 +193,25 @@ export const AudioProvider = ({ children }) => {
                 hls.startLoad();
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
-                console.warn("HLS Media Error, attempting single recovery...", data);
+                console.warn("HLS Media Error, attempting recovery...", data);
                 hls.recoverMediaError();
                 break;
               default:
-                hls.destroy();
+                destroyHls();
                 setIsPlaying(false);
                 break;
             }
           }
         });
-
-        hlsRef.current = hls;
-      } else if (audioRef.current.canPlayType('application/vnd.apple.mpegurl')) {
-        audioRef.current.src = audioUrl;
-        audioRef.current.play().then(() => {
+      } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+        audio.src = audioUrl;
+        audio.play().then(() => {
           initWebAudio();
         }).catch(console.error);
       }
     } else {
-      audioRef.current.src = audioUrl;
-      audioRef.current.play().then(() => {
+      audio.src = audioUrl;
+      audio.play().then(() => {
         initWebAudio();
       }).catch(console.error);
     }
