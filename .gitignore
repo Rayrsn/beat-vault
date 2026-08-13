@@ -25,3 +25,4 @@ dist-ssr
 
 # Beat Hub
 beat-files/*
+*.key

@@ -176,6 +176,18 @@ export const AudioProvider = ({ children }) => {
                 }
               }
             }
+
+            const originalOnSuccess = callbacks.onSuccess;
+            callbacks.onSuccess = (response, stats, ctx, networkDetails) => {
+              if (response.data && response.data.byteLength && response.data.byteLength > 16) {
+                const isKeyUrl = (ctx.url && ctx.url.includes('.key')) || ctx.type === 'key';
+                if (isKeyUrl) {
+                  response.data = response.data.slice(0, 16);
+                }
+              }
+              originalOnSuccess(response, stats, ctx, networkDetails);
+            };
+
             super.load(context, config, callbacks);
           }
         }
