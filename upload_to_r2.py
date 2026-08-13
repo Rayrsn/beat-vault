@@ -41,22 +41,32 @@ s3_client = boto3.client(
     region_name="auto"
 )
 
-# Target Beat Pack directories to look for
-target_dir_names = [
-    "beat-pack-3",
-    "beat-pack-4-keys",
-    "beat-pack-5-keys",
-    "beat-pack-6-keys",
-    "beat-pack-7-keys",
-    "beat-pack-8-keys",
-    "beat-pack-special-keys",
-    "beat-pack-x-keys",
-    "beats",
-    "new-beats"
+# Target Beat Pack directory mappings: (local_rel_path, r2_target_prefix)
+folder_mappings = [
+    ("beat-files/Audio/Beats", "beats"),
+    ("beat-files/Audio/New-Beats", "new-beats"),
+    ("beat-files/Audio/beat-pack-3", "beat-pack-3"),
+    ("beat-files/Audio/beat-pack-4", "beat-pack-4"),
+    ("beat-files/Audio/beat-pack-5", "beat-pack-5"),
+    ("beat-files/Audio/beat-pack-6", "beat-pack-6"),
+    ("beat-files/Audio/beat-pack-7", "beat-pack-7"),
+    ("beat-files/Audio/beat-pack-8", "beat-pack-8"),
+    ("beat-files/Audio/beat-pack-special", "beat-pack-special"),
+    ("beat-files/Audio/beat-pack-x", "beat-pack-x"),
+    ("beat-files/Keys/beats", "beats"),
+    ("beat-files/Keys/new-beats", "new-beats"),
+    ("beat-files/Keys/beat-pack-4-keys", "beat-pack-4-keys"),
+    ("beat-files/Keys/beat-pack-5-keys", "beat-pack-5-keys"),
+    ("beat-files/Keys/beat-pack-6-keys", "beat-pack-6-keys"),
+    ("beat-files/Keys/beat-pack-7-keys", "beat-pack-7-keys"),
+    ("beat-files/Keys/beat-pack-8-keys", "beat-pack-8-keys"),
+    ("beat-files/Keys/beat-pack-special-keys", "beat-pack-special-keys"),
+    ("beat-files/Keys/beat-pack-x-keys", "beat-pack-x-keys"),
+    ("public/beats", "beats"),
+    ("public/new-beats", "new-beats"),
 ]
 
-# Look for directories in current dir, public/, or parent dir
-search_bases = [".", "public", "..", "../public"]
+search_bases = [".", ".."]
 
 content_type_map = {
     ".m3u8": "application/x-mpegurl",
@@ -74,25 +84,23 @@ uploaded_files = 0
 print(f"\n🚀 Starting upload to Cloudflare R2 bucket: '{bucket_name}'...")
 print(f"🔗 Target Public Domain: https://beats.rayr.cf\n")
 
-for name in target_dir_names:
+for local_rel, r2_prefix in folder_mappings:
     target_path = None
     for base in search_bases:
-        candidate = os.path.join(base, name)
+        candidate = os.path.join(base, local_rel)
         if os.path.isdir(candidate):
             target_path = candidate
             break
 
     if not target_path:
-        print(f"⚠️ Directory '{name}' not found in current folder, public/, or parent dir. Skipping...")
         continue
 
-    print(f"📂 Found target folder: '{target_path}'")
+    print(f"📂 Scanning target folder: '{target_path}' -> R2 prefix: '{r2_prefix}'")
     for root, _, files in os.walk(target_path):
         for f in files:
             local_file_path = os.path.join(root, f)
-            # Compute R2 object key starting from the pack folder name (e.g. beat-pack-3/Control.key)
-            rel_from_pack = os.path.relpath(local_file_path, target_path)
-            r2_key = os.path.join(name, rel_from_pack).replace("\\", "/")
+            rel_from_folder = os.path.relpath(local_file_path, target_path)
+            r2_key = os.path.join(r2_prefix, rel_from_folder).replace("\\", "/")
 
             ext = os.path.splitext(f)[1].lower()
             content_type = content_type_map.get(ext, mimetypes.guess_type(local_file_path)[0] or "application/octet-stream")
