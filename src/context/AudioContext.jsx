@@ -103,17 +103,18 @@ export const AudioProvider = ({ children }) => {
     }
   };
 
-  // Cleanly destroy existing HLS instance
+  // Safe HLS instance destruction without uncaught promise rejection
   const destroyHls = () => {
     if (hlsRef.current) {
-      try {
-        hlsRef.current.stopLoad();
-        hlsRef.current.detachMedia();
-        hlsRef.current.destroy();
-      } catch (e) {
-        console.warn("Error detaching HLS media:", e);
-      }
+      const hls = hlsRef.current;
       hlsRef.current = null;
+      try {
+        hls.stopLoad();
+        hls.detachMedia();
+        hls.destroy();
+      } catch (e) {
+        // Suppress expected media detachment DOMException
+      }
     }
   };
 
@@ -131,7 +132,7 @@ export const AudioProvider = ({ children }) => {
         audio.pause();
       } else {
         initWebAudio();
-        audio.play().catch(err => console.warn("Play error:", err));
+        audio.play().catch(() => {});
       }
       return;
     }
@@ -148,15 +149,10 @@ export const AudioProvider = ({ children }) => {
 
     // Clean up previous HLS session
     destroyHls();
+    audio.pause();
 
-    // Trigger synchronous play attempt inside user gesture event tick
+    // Init Web Audio context
     initWebAudio();
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(() => {
-        // Expected initial rejection while media source / src is being loaded
-      });
-    }
 
     // HLS.js streaming setup
     if (audioUrl.endsWith('.m3u8')) {
@@ -177,9 +173,12 @@ export const AudioProvider = ({ children }) => {
         hls.attachMedia(audio);
         
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          audio.play().catch(err => {
-            console.warn("Manifest parsed play retry:", err);
-          });
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(() => {
+              // Gracefully handle browser policy or rapid track switch aborts
+            });
+          }
         });
 
         hls.on(Hls.Events.ERROR, (event, data) => {
@@ -210,11 +209,11 @@ export const AudioProvider = ({ children }) => {
         });
       } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
         audio.src = audioUrl;
-        audio.play().catch(console.error);
+        audio.play().catch(() => {});
       }
     } else {
       audio.src = audioUrl;
-      audio.play().catch(console.error);
+      audio.play().catch(() => {});
     }
   };
 
@@ -229,7 +228,7 @@ export const AudioProvider = ({ children }) => {
       audioRef.current.pause();
     } else {
       initWebAudio();
-      audioRef.current.play().catch(console.error);
+      audioRef.current.play().catch(() => {});
     }
   };
 
