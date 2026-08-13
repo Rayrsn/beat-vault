@@ -64,8 +64,6 @@ export const AudioProvider = ({ children }) => {
       audio.removeEventListener('ended', handleEnded);
       if (hlsRef.current) {
         try {
-          hlsRef.current.stopLoad();
-          hlsRef.current.detachMedia();
           hlsRef.current.destroy();
         } catch (e) {}
       }
@@ -103,17 +101,15 @@ export const AudioProvider = ({ children }) => {
     }
   };
 
-  // Safe HLS instance destruction without uncaught promise rejection
+  // Safe HLS instance destruction without triggering redundant detachMedia events
   const destroyHls = () => {
     if (hlsRef.current) {
       const hls = hlsRef.current;
       hlsRef.current = null;
       try {
-        hls.stopLoad();
-        hls.detachMedia();
         hls.destroy();
       } catch (e) {
-        // Suppress expected media detachment DOMException
+        // Suppress unexpected HLS cleanup exceptions
       }
     }
   };
@@ -147,9 +143,15 @@ export const AudioProvider = ({ children }) => {
 
     const audioUrl = track.audioUrl;
 
-    // Clean up previous HLS session
-    destroyHls();
+    // Pause audio cleanly and destroy previous HLS instance
     audio.pause();
+    destroyHls();
+
+    // Reset audio element source state cleanly
+    try {
+      audio.removeAttribute('src');
+      audio.load();
+    } catch (e) {}
 
     // Init Web Audio context
     initWebAudio();
@@ -169,14 +171,14 @@ export const AudioProvider = ({ children }) => {
         });
 
         hlsRef.current = hls;
-        hls.loadSource(audioUrl);
         hls.attachMedia(audio);
+        hls.loadSource(audioUrl);
         
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           const playPromise = audio.play();
           if (playPromise !== undefined) {
             playPromise.catch(() => {
-              // Gracefully handle browser policy or rapid track switch aborts
+              // Ignore expected browser policy or fast-switch play promise rejections
             });
           }
         });
