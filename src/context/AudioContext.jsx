@@ -198,6 +198,7 @@ export const AudioProvider = ({ children }) => {
           backBufferLength: 90,
           maxBufferLength: 30,
           maxMaxBufferLength: 600,
+          loader: KeyRewriterLoader,
           fLoader: KeyRewriterLoader,
           pLoader: KeyRewriterLoader,
           xhrSetup: (xhr) => {
