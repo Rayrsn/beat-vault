@@ -27,13 +27,15 @@ export const AudioProvider = ({ children }) => {
   const analyserRef = useRef(null);
   const sourceRef = useRef(null);
 
-  // Initialize HTML5 Audio Element
+  // Initialize HTML5 Audio Element & Event Listeners
   useEffect(() => {
     const audio = new Audio();
     audio.volume = volume;
     audioRef.current = audio;
 
-    // Time update listener
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+    
     const handleTimeUpdate = () => {
       setCurrentTime(audio.currentTime);
       if (audio.duration && !isNaN(audio.duration)) {
@@ -42,13 +44,20 @@ export const AudioProvider = ({ children }) => {
     };
 
     const handleEnded = () => {
+      setIsPlaying(false);
       playNext();
     };
 
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('playing', handlePlay);
+    audio.addEventListener('pause', handlePause);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
 
     return () => {
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('playing', handlePlay);
+      audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
       if (hlsRef.current) {
@@ -57,7 +66,7 @@ export const AudioProvider = ({ children }) => {
     };
   }, []);
 
-  // Web Audio Context setup for visualizer with safe CORS fallback
+  // Web Audio Context setup for visualizer
   const initWebAudio = () => {
     if (!audioCtxRef.current && audioRef.current) {
       try {
@@ -75,7 +84,7 @@ export const AudioProvider = ({ children }) => {
         sourceRef.current = source;
         setHasWebAudioCors(true);
       } catch (e) {
-        console.warn("Web Audio API CORS restricted on remote media source. Using synthetic visualizer fallback:", e);
+        console.warn("Web Audio API CORS restricted. Using synthetic visualizer fallback:", e);
         setHasWebAudioCors(false);
       }
     }
@@ -93,9 +102,8 @@ export const AudioProvider = ({ children }) => {
     if (currentTrack?.id === track.id) {
       if (isPlaying) {
         audioRef.current.pause();
-        setIsPlaying(false);
       } else {
-        audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
+        audioRef.current.play().catch(console.error);
       }
       return;
     }
@@ -128,19 +136,17 @@ export const AudioProvider = ({ children }) => {
         hls.attachMedia(audioRef.current);
         
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          audioRef.current.play().then(() => setIsPlaying(true)).catch(err => {
+          audioRef.current.play().catch(err => {
             console.warn("Audio autoplay blocked:", err);
           });
         });
 
         hls.on(Hls.Events.ERROR, (event, data) => {
-          console.warn("HLS Error Event:", data);
           if (data.fatal) {
             if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-              setStreamErrorNotice("REMOTE CDN CORS / INFINITYFREE BOT-SHIELD BLOCKING AJAX FETCH (HTTP 520 / JS COOKIE CHALLENGE). HOST AUDIO ON VPS / S3 / R2 TO BYPASS.");
-              // Attempt direct HTML5 audio assignment fallback
+              console.warn("Network error during stream:", data);
               audioRef.current.src = audioUrl;
-              audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+              audioRef.current.play().catch(() => {});
             } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
               hls.recoverMediaError();
             } else {
@@ -151,14 +157,12 @@ export const AudioProvider = ({ children }) => {
 
         hlsRef.current = hls;
       } else if (audioRef.current.canPlayType('application/vnd.apple.mpegurl')) {
-        // Native Safari HLS support
         audioRef.current.src = audioUrl;
-        audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
+        audioRef.current.play().catch(console.error);
       }
     } else {
-      // Direct Audio File fallback
       audioRef.current.src = audioUrl;
-      audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
+      audioRef.current.play().catch(console.error);
     }
   };
 
@@ -172,9 +176,8 @@ export const AudioProvider = ({ children }) => {
 
     if (isPlaying) {
       audioRef.current.pause();
-      setIsPlaying(false);
     } else {
-      audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
+      audioRef.current.play().catch(console.error);
     }
   };
 

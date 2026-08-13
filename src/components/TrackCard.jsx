@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAudio } from '../context/AudioContext';
 import VisualizerCanvas from './VisualizerCanvas';
-import { Play, Pause, Headphones, Share2, Check } from 'lucide-react';
+import { Play, Pause, Share2, Check } from 'lucide-react';
 
 const TrackCard = ({ track, index, viewMode = 'grid', allFilteredTracks = [] }) => {
   const { currentTrack, isPlaying, playTrack } = useAudio();
@@ -27,14 +27,14 @@ const TrackCard = ({ track, index, viewMode = 'grid', allFilteredTracks = [] }) 
   if (viewMode === 'list') {
     return (
       <div className={`track-list-item card-tactile ${isCurrent ? 'card-tactile-playing' : ''}`}>
-        <div className="track-list-main">
+        <div className="track-list-main" onClick={handlePlayClick} style={{ cursor: 'pointer' }}>
           <span className="track-num">{formattedIndex}.</span>
 
           <button 
             className={`play-btn-circle ${isThisPlaying ? 'active' : ''}`}
             onClick={handlePlayClick}
           >
-            {isThisPlaying ? <Pause size={14} fill="#fff" /> : <Play size={14} fill={isCurrent ? '#fff' : '#fff'} />}
+            {isThisPlaying ? <Pause size={14} fill="#fff" /> : <Play size={14} fill="#fff" />}
           </button>
 
           <div className="track-info">
@@ -48,23 +48,13 @@ const TrackCard = ({ track, index, viewMode = 'grid', allFilteredTracks = [] }) 
           <span className="badge-mono">{track.key}</span>
           <span className="badge-mono">{track.genre}</span>
 
-          <div className="track-list-action">
-            <button 
-              className={`btn-brutal ${isThisPlaying ? 'btn-brutal-primary' : ''} list-preview-btn`} 
-              onClick={handlePlayClick}
-            >
-              {isThisPlaying ? <Pause size={13} /> : <Headphones size={13} />}
-              {isThisPlaying ? 'PAUSE' : 'PREVIEW'}
-            </button>
-
-            <button 
-              className="btn-brutal share-btn-icon" 
-              onClick={handleShareClick}
-              title="Copy Relative Preview Link"
-            >
-              {copied ? <Check size={14} className="copied-icon" /> : <Share2 size={14} />}
-            </button>
-          </div>
+          <button 
+            className="btn-brutal share-btn-icon" 
+            onClick={handleShareClick}
+            title="Copy Share Link"
+          >
+            {copied ? <Check size={14} className="copied-icon" /> : <Share2 size={14} />}
+          </button>
         </div>
 
         {isCurrent && (
@@ -88,6 +78,7 @@ const TrackCard = ({ track, index, viewMode = 'grid', allFilteredTracks = [] }) 
             display: flex;
             align-items: center;
             gap: 16px;
+            flex: 1;
           }
           .track-num {
             font-family: var(--font-mono);
@@ -97,8 +88,8 @@ const TrackCard = ({ track, index, viewMode = 'grid', allFilteredTracks = [] }) 
             min-width: 24px;
           }
           .play-btn-circle {
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             background: var(--bg-void);
             border: 2px solid var(--border-steel-bright);
@@ -135,17 +126,8 @@ const TrackCard = ({ track, index, viewMode = 'grid', allFilteredTracks = [] }) 
             align-items: center;
             gap: 12px;
           }
-          .track-list-action {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-          .list-preview-btn {
-            padding: 6px 14px;
-            font-size: 0.75rem;
-          }
           .share-btn-icon {
-            padding: 6px;
+            padding: 8px;
           }
           .copied-icon {
             color: var(--accent-purple-bright);
@@ -165,18 +147,18 @@ const TrackCard = ({ track, index, viewMode = 'grid', allFilteredTracks = [] }) 
       {/* Top Header Row */}
       <div className="card-top-row">
         <span className="card-index-tag">#{formattedIndex}</span>
-        <span className="card-status-badge badge-avail">
-          [PREVIEW READY]
+        <span className="card-status-badge">
+          {isThisPlaying ? '[PLAYING]' : '[READY]'}
         </span>
       </div>
 
       {/* Play Action & Title */}
-      <div className="card-center-row">
+      <div className="card-center-row" onClick={handlePlayClick} style={{ cursor: 'pointer' }}>
         <button 
           className={`grid-play-btn ${isThisPlaying ? 'playing' : ''}`}
           onClick={handlePlayClick}
         >
-          {isThisPlaying ? <Pause size={20} fill="#fff" /> : <Play size={20} fill={isCurrent ? '#fff' : '#fff'} />}
+          {isThisPlaying ? <Pause size={22} fill="#fff" /> : <Play size={22} fill="#fff" />}
         </button>
 
         <div className="grid-title-box">
@@ -187,30 +169,21 @@ const TrackCard = ({ track, index, viewMode = 'grid', allFilteredTracks = [] }) 
 
       {/* Equalizer Visualizer */}
       <div className="card-visualizer-box">
-        <VisualizerCanvas height={40} isActive={isThisPlaying} />
+        <VisualizerCanvas height={36} isActive={isThisPlaying} />
       </div>
 
-      {/* Metadata Badges */}
-      <div className="card-meta-row">
-        <span className="badge-mono">{track.bpm} BPM</span>
-        <span className="badge-mono">{track.key}</span>
-        <span className="badge-mono">{track.genre}</span>
-      </div>
-
-      {/* Action Footer */}
+      {/* Metadata Badges & Share Action */}
       <div className="card-footer-row">
-        <button 
-          className={`btn-brutal ${isThisPlaying ? 'btn-brutal-primary' : ''} card-action-btn`}
-          onClick={handlePlayClick}
-        >
-          {isThisPlaying ? <Pause size={14} /> : <Headphones size={14} />}
-          {isThisPlaying ? 'PAUSE STREAM' : 'LISTEN PREVIEW'}
-        </button>
+        <div className="card-meta-row">
+          <span className="badge-mono">{track.bpm} BPM</span>
+          <span className="badge-mono">{track.key}</span>
+          <span className="badge-mono">{track.genre}</span>
+        </div>
 
         <button 
           className="btn-brutal share-card-btn"
           onClick={handleShareClick}
-          title="Share Preview Link"
+          title="Share Beat Link"
         >
           {copied ? <Check size={14} className="copied-icon" /> : <Share2 size={14} />}
         </button>
@@ -246,8 +219,8 @@ const TrackCard = ({ track, index, viewMode = 'grid', allFilteredTracks = [] }) 
           gap: 14px;
         }
         .grid-play-btn {
-          width: 48px;
-          height: 48px;
+          width: 50px;
+          height: 50px;
           flex-shrink: 0;
           background: var(--bg-void);
           border: 2px solid var(--border-steel-bright);
@@ -262,13 +235,14 @@ const TrackCard = ({ track, index, viewMode = 'grid', allFilteredTracks = [] }) 
           background: var(--accent-purple);
           color: #fff;
           border-color: var(--accent-purple-bright);
+          box-shadow: 0 0 12px var(--accent-purple-glow);
         }
         .grid-title-box {
           overflow: hidden;
         }
         .grid-track-title {
           font-family: var(--font-impact);
-          font-size: 1.25rem;
+          font-size: 1.3rem;
           font-weight: 800;
           line-height: 1.2;
           white-space: nowrap;
@@ -282,25 +256,23 @@ const TrackCard = ({ track, index, viewMode = 'grid', allFilteredTracks = [] }) 
           text-transform: uppercase;
         }
         .card-visualizer-box {
-          margin: 4px 0;
+          margin: 2px 0;
         }
         .card-meta-row {
           display: flex;
           gap: 6px;
           flex-wrap: wrap;
+          flex: 1;
         }
         .card-footer-row {
           display: flex;
           align-items: center;
+          justify-content: space-between;
           gap: 8px;
           margin-top: 4px;
         }
-        .card-action-btn {
-          flex: 1;
-          justify-content: center;
-        }
         .share-card-btn {
-          padding: 10px;
+          padding: 8px;
         }
       `}</style>
     </div>
