@@ -7,7 +7,6 @@ import FilterBar from './components/FilterBar';
 import TrackCard from './components/TrackCard';
 import AudioPlayer from './components/AudioPlayer';
 import QueueDrawer from './components/QueueDrawer';
-import ShowcaseSection from './components/ShowcaseSection';
 import { SearchX, ArrowLeft, Sliders, Disc } from 'lucide-react';
 
 const MainAppContent = () => {
@@ -42,7 +41,7 @@ const MainAppContent = () => {
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch = !q || (
         t.title.toLowerCase().includes(q) ||
-        t.packTitle.toLowerCase().includes(q) ||
+        (t.packTitle && t.packTitle.toLowerCase().includes(q)) ||
         t.tags.some(tag => tag.toLowerCase().includes(q))
       );
 
@@ -104,8 +103,6 @@ const MainAppContent = () => {
             tracks={tracks}
             onSelectPack={handleSelectPackFromHome}
           />
-
-          <ShowcaseSection />
         </div>
       )}
 

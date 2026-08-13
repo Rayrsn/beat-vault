@@ -3,6 +3,8 @@ import { useAudio } from '../context/AudioContext';
 import { Sliders, Headphones, ArrowRight, Disc } from 'lucide-react';
 
 const Hero = ({ onGoToPacks, onGoToCatalog }) => {
+  const { tracks, beatPacks } = useAudio();
+
   return (
     <section className="hero-section">
       <div className="hero-bg-parallax" style={{ backgroundImage: "url('./bg2.png')" }}></div>
@@ -33,11 +35,11 @@ const Hero = ({ onGoToPacks, onGoToCatalog }) => {
 
         <div className="hero-stats">
           <div className="stat-card">
-            <span className="stat-num">136</span>
+            <span className="stat-num">{tracks.length || 210}</span>
             <span className="stat-label">BEAT PREVIEWS</span>
           </div>
           <div className="stat-card">
-            <span className="stat-num">10</span>
+            <span className="stat-num">{beatPacks.length || 10}</span>
             <span className="stat-label">BEAT PACKS</span>
           </div>
           <div className="stat-card">
@@ -51,17 +53,10 @@ const Hero = ({ onGoToPacks, onGoToCatalog }) => {
         </div>
       </div>
 
-      {/* Industrial Continuous Marquee Ticker */}
-      <div className="marquee-container">
-        <div className="marquee-content">
-          ⚡ BEAT PACK X PREVIEW /// BEAT PACK SPECIAL /// BEAT PACK 8 PT. 1 & 2 /// NEW DRILL & TRAP BEATS DROPPING WEEKLY /// HIGH QUALITY HLS AUDIO PREVIEWS /// RAYR BEATS /// BEAT PACK X PREVIEW /// BEAT PACK SPECIAL /// BEAT PACK 8 PT. 1 & 2 /// NEW DRILL & TRAP BEATS DROPPING WEEKLY /// 
-        </div>
-      </div>
-
       <style>{`
         .hero-section {
           position: relative;
-          min-height: 460px;
+          min-height: 400px;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
