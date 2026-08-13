@@ -41,8 +41,8 @@ s3_client = boto3.client(
     region_name="auto"
 )
 
-# Directories to upload
-target_dirs = [
+# Target Beat Pack directories to look for
+target_dir_names = [
     "beat-pack-3",
     "beat-pack-4-keys",
     "beat-pack-5-keys",
@@ -55,6 +55,9 @@ target_dirs = [
     "new-beats"
 ]
 
+# Look for directories in current dir, public/, or parent dir
+search_bases = [".", "public", "..", "../public"]
+
 content_type_map = {
     ".m3u8": "application/x-mpegurl",
     ".ts": "video/MP2T",
@@ -66,30 +69,38 @@ content_type_map = {
     ".webp": "image/webp"
 }
 
-total_files = 0
 uploaded_files = 0
 
 print(f"\n🚀 Starting upload to Cloudflare R2 bucket: '{bucket_name}'...")
 print(f"🔗 Target Public Domain: https://beats.rayr.cf\n")
 
-for target in target_dirs:
-    if not os.path.exists(target):
-        print(f"⚠️ Directory '{target}' not found, skipping...")
+for name in target_dir_names:
+    target_path = None
+    for base in search_bases:
+        candidate = os.path.join(base, name)
+        if os.path.isdir(candidate):
+            target_path = candidate
+            break
+
+    if not target_path:
+        print(f"⚠️ Directory '{name}' not found in current folder, public/, or parent dir. Skipping...")
         continue
 
-    for root, _, files in os.walk(target):
+    print(f"📂 Found target folder: '{target_path}'")
+    for root, _, files in os.walk(target_path):
         for f in files:
-            local_path = os.path.join(root, f)
-            # R2 key maintains clean relative path
-            r2_key = os.path.relpath(local_path, ".").replace("\\", "/")
+            local_file_path = os.path.join(root, f)
+            # Compute R2 object key starting from the pack folder name (e.g. beat-pack-3/Control.key)
+            rel_from_pack = os.path.relpath(local_file_path, target_path)
+            r2_key = os.path.join(name, rel_from_pack).replace("\\", "/")
 
             ext = os.path.splitext(f)[1].lower()
-            content_type = content_type_map.get(ext, mimetypes.guess_type(local_path)[0] or "application/octet-stream")
+            content_type = content_type_map.get(ext, mimetypes.guess_type(local_file_path)[0] or "application/octet-stream")
 
             try:
                 print(f"Uploading [{uploaded_files + 1}] {r2_key} ({content_type})...")
                 s3_client.upload_file(
-                    local_path,
+                    local_file_path,
                     bucket_name,
                     r2_key,
                     ExtraArgs={
