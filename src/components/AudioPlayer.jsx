@@ -3,7 +3,7 @@ import { useAudio } from '../context/AudioContext';
 import VisualizerCanvas from './VisualizerCanvas';
 import { 
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, 
-  ListMusic, Radio, Share2, Check 
+  ListMusic, Radio, Share2, Check, AlertTriangle 
 } from 'lucide-react';
 
 const formatTime = (secs) => {
@@ -21,6 +21,7 @@ const AudioPlayer = () => {
     duration,
     volume,
     isMuted,
+    streamErrorNotice,
     togglePlayPause,
     playNext,
     playPrev,
@@ -35,7 +36,7 @@ const AudioPlayer = () => {
 
   const handleShareCurrent = () => {
     if (currentTrack) {
-      navigator.clipboard.writeText(`${window.location.origin}/#${currentTrack.id}`);
+      navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}#${currentTrack.id}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -90,6 +91,13 @@ const AudioPlayer = () => {
 
   return (
     <div className="sticky-player-bar">
+      {/* Remote CDN Error Warning Toast */}
+      {streamErrorNotice && (
+        <div className="stream-notice-banner">
+          <AlertTriangle size={14} /> {streamErrorNotice}
+        </div>
+      )}
+
       {/* Top Timeline Progress Bar */}
       <div className="player-progress-container">
         <input 
@@ -186,6 +194,21 @@ const AudioPlayer = () => {
           border-top: 2px solid var(--accent-purple);
           z-index: 1000;
           box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.8);
+        }
+        .stream-notice-banner {
+          background: var(--bg-void);
+          color: #ffaa00;
+          font-family: var(--font-mono);
+          font-size: 0.7rem;
+          font-weight: 700;
+          padding: 3px 12px;
+          border-bottom: 1px solid #ffaa00;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
         }
         .player-progress-container {
           position: relative;

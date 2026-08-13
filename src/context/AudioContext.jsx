@@ -18,6 +18,7 @@ export const AudioProvider = ({ children }) => {
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [scanlinesActive, setScanlinesActive] = useState(true);
   const [hasWebAudioCors, setHasWebAudioCors] = useState(true);
+  const [streamErrorNotice, setStreamErrorNotice] = useState(null);
 
   // Web Audio API refs
   const audioRef = useRef(null);
@@ -63,9 +64,8 @@ export const AudioProvider = ({ children }) => {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         const ctx = new AudioContextClass();
         const analyser = ctx.createAnalyser();
-        analyser.fftSize = 64; // High response frequency bars
+        analyser.fftSize = 64;
         
-        // Attempt connecting source (may fail if CORS is missing on remote CDN)
         const source = ctx.createMediaElementSource(audioRef.current);
         source.connect(analyser);
         analyser.connect(ctx.destination);
@@ -87,6 +87,7 @@ export const AudioProvider = ({ children }) => {
   // Play a track
   const playTrack = (track, trackList = []) => {
     if (!audioRef.current) return;
+    setStreamErrorNotice(null);
     initWebAudio();
 
     if (currentTrack?.id === track.id) {
@@ -128,24 +129,22 @@ export const AudioProvider = ({ children }) => {
         
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           audioRef.current.play().then(() => setIsPlaying(true)).catch(err => {
-            console.warn("Audio autoplay blocked by browser policy:", err);
+            console.warn("Audio autoplay blocked:", err);
           });
         });
 
         hls.on(Hls.Events.ERROR, (event, data) => {
+          console.warn("HLS Error Event:", data);
           if (data.fatal) {
-            switch (data.type) {
-              case Hls.ErrorTypes.NETWORK_ERROR:
-                console.warn("HLS Network Error, trying recovery...", data);
-                hls.startLoad();
-                break;
-              case Hls.ErrorTypes.MEDIA_ERROR:
-                console.warn("HLS Media Error, recovering...", data);
-                hls.recoverMediaError();
-                break;
-              default:
-                hls.destroy();
-                break;
+            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+              setStreamErrorNotice("REMOTE CDN CORS / INFINITYFREE BOT-SHIELD BLOCKING AJAX FETCH (HTTP 520 / JS COOKIE CHALLENGE). HOST AUDIO ON VPS / S3 / R2 TO BYPASS.");
+              // Attempt direct HTML5 audio assignment fallback
+              audioRef.current.src = audioUrl;
+              audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+            } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+              hls.recoverMediaError();
+            } else {
+              hls.destroy();
             }
           }
         });
@@ -157,7 +156,7 @@ export const AudioProvider = ({ children }) => {
         audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
       }
     } else {
-      // Direct MP3/Audio file
+      // Direct Audio File fallback
       audioRef.current.src = audioUrl;
       audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
     }
@@ -262,6 +261,7 @@ export const AudioProvider = ({ children }) => {
         isQueueOpen,
         scanlinesActive,
         hasWebAudioCors,
+        streamErrorNotice,
         analyserRef,
         setScanlinesActive,
         setIsQueueOpen,
