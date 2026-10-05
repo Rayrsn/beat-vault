@@ -170,14 +170,18 @@ export const AudioProvider = ({ children }) => {
           load(context, config, callbacks) {
             if (context.url) {
               if (isLocalhost) {
-                if (context.url.includes('beats.rayr.cf/')) {
+                if (context.url.includes('beat-files.rayrsn.me/')) {
+                  context.url = context.url.replace('https://beat-files.rayrsn.me/', '/r2-beats/');
+                } else if (context.url.includes('beats.rayr.cf/')) {
                   context.url = context.url.replace('https://beats.rayr.cf/', '/r2-beats/');
                 } else if (context.url.includes('rayr.cf/')) {
                   context.url = context.url.replace('https://rayr.cf/', '/r2-beats/');
                 }
               } else {
-                if (context.url.includes('rayr.cf/') && !context.url.includes('beats.rayr.cf/')) {
-                  context.url = context.url.replace('https://rayr.cf/', 'https://beats.rayr.cf/');
+                if (context.url.includes('beats.rayr.cf/')) {
+                  context.url = context.url.replace('https://beats.rayr.cf/', 'https://beat-files.rayrsn.me/');
+                } else if (context.url.includes('rayr.cf/')) {
+                  context.url = context.url.replace('https://rayr.cf/', 'https://beat-files.rayrsn.me/');
                 }
               }
             }
@@ -214,17 +218,27 @@ export const AudioProvider = ({ children }) => {
         hlsRef.current = hls;
         hls.attachMedia(audio);
         const finalUrl = isLocalhost
-          ? audioUrl.replace('https://beats.rayr.cf/', '/r2-beats/').replace('https://rayr.cf/', '/r2-beats/')
-          : audioUrl.replace('https://rayr.cf/', 'https://beats.rayr.cf/');
+          ? audioUrl
+              .replace('https://beat-files.rayrsn.me/', '/r2-beats/')
+              .replace('https://beats.rayr.cf/', '/r2-beats/')
+              .replace('https://rayr.cf/', '/r2-beats/')
+          : audioUrl
+              .replace('https://beats.rayr.cf/', 'https://beat-files.rayrsn.me/')
+              .replace('https://rayr.cf/', 'https://beat-files.rayrsn.me/');
         hls.loadSource(finalUrl);
         
         hls.on(Hls.Events.KEY_LOADING, (event, data) => {
           if (data && data.frag && data.frag.decryptdata && data.frag.decryptdata.uri) {
             let keyUri = data.frag.decryptdata.uri;
             if (isLocalhost) {
-              keyUri = keyUri.replace('https://beats.rayr.cf/', '/r2-beats/').replace('https://rayr.cf/', '/r2-beats/');
+              keyUri = keyUri
+                .replace('https://beat-files.rayrsn.me/', '/r2-beats/')
+                .replace('https://beats.rayr.cf/', '/r2-beats/')
+                .replace('https://rayr.cf/', '/r2-beats/');
             } else {
-              keyUri = keyUri.replace('https://rayr.cf/', 'https://beats.rayr.cf/');
+              keyUri = keyUri
+                .replace('https://beats.rayr.cf/', 'https://beat-files.rayrsn.me/')
+                .replace('https://rayr.cf/', 'https://beat-files.rayrsn.me/');
             }
             data.frag.decryptdata.uri = keyUri;
           }
@@ -266,7 +280,10 @@ export const AudioProvider = ({ children }) => {
           }
         });
       } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
-        audio.src = audioUrl;
+        const finalUrl = audioUrl
+          .replace('https://beats.rayr.cf/', 'https://beat-files.rayrsn.me/')
+          .replace('https://rayr.cf/', 'https://beat-files.rayrsn.me/');
+        audio.src = finalUrl;
         audio.play().catch(() => {});
       }
     } else {

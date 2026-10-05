@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/r2-beats': {
-        target: 'https://beats.rayr.cf',
+        target: 'https://beat-files.rayrsn.me',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/r2-beats/, '')
       }

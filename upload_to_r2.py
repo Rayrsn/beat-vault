@@ -82,7 +82,7 @@ content_type_map = {
 uploaded_files = 0
 
 print(f"\n🚀 Starting upload to Cloudflare R2 bucket: '{bucket_name}'...")
-print(f"🔗 Target Public Domain: https://beats.rayr.cf\n")
+print(f"🔗 Target Public Domain: https://beat-files.rayrsn.me\n")
 
 for local_rel, r2_prefix in folder_mappings:
     target_path = None
@@ -121,4 +121,4 @@ for local_rel, r2_prefix in folder_mappings:
                 print(f"❌ Failed to upload {r2_key}: {e}")
 
 print(f"\n🎉 UPLOAD COMPLETE! {uploaded_files} files successfully uploaded to Cloudflare R2 bucket '{bucket_name}'.")
-print(f"⚡ All tracks in beats-manifest.json now stream directly from https://beats.rayr.cf!")
+print(f"⚡ All tracks in beats-manifest.json now stream directly from https://beat-files.rayrsn.me!")
